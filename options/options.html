@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Chrome Tab AutoMuter Options</title>
+	<link rel="stylesheet" type="text/css" href="options.css" />
+	<link rel="stylesheet" type="text/css" href="../font-awesome.min.css" />
+</head>
+<body>
+	<form>
+		<div class="row">
+			<p>Modify the list below to control which sites get muted when navigated to. Use wildcards to filter entire domains/subdomains/subfolders.</p>
+		</div>
+		<div class="row">
+			<span class="left"><input id="txtNewUrl" type="text" placeholder="New Url" spellcheck="false" /></span>
+			<span class="right">
+				<button id="btnAddUrl" type="button" disabled class="add-btn"><i class="fa fa-plus"></i> Add</button>
+			</span>
+		</div>
+		<div class="row">
+			<select id="lstUrls" size="6"></select>
+		</div>
+		<div class="row">
+			<button id="btnDeleteUrl" type="button" disabled><i class="fa fa-trash"></i> Delete</button>
+		</div>
+		<hr />
+		<div class="row">
+			<button id="btnSave" type="button" disabled><i class="fa fa-save"></i> Save</button>
+			<button id="btnHelp" type="button"><i class="fa fa-question"></i> Help</button>
+		</div>
+	</form>
+	<script src="../url-pattern.js"></script>
+	<script src="../util.js"></script>
+	<script src="options.js"></script>
+</body>
+</html>

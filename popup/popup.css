@@ -1,0 +1,32 @@
+html {
+	margin: 0;
+	padding: 0;
+}
+
+body {
+	margin: 5px;
+	padding: 0;
+}
+
+h1 {
+	text-align: center;
+}
+
+.row {
+	clear: both;
+	width: 100%;
+	margin-top: 5px;
+}
+
+.left {
+	display: table-cell;
+	width: 100%;
+}
+
+.right {
+	display: table-cell;
+}
+
+#btnAddUrl {
+	float: right;
+}

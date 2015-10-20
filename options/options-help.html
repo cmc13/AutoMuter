@@ -1,0 +1,39 @@
+<html>
+<head>
+	<title>AutoMuter Options - Help</title>
+	<link href="options-help.css" rel="stylesheet" />
+</head>
+<body>
+	<h1>AutoMuter Options - Help</h1>
+
+	<div>
+		<h2>Url Pattern Syntax</h2>
+		<table>
+			<thead>
+				<tr>
+					<th>Character</th>
+					<th>Meaning</th>
+					<th>Example</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td>*</td>
+					<td>Wildcard - match 0 or more characters</td>
+					<td>http://*.google.com/*</td>
+				</tr>
+				<tr>
+					<td>()</td>
+					<td>Optional - makes the enclosed text optional</td>
+					<td>http(s)://www.google.com/*</td>
+				</tr>
+				<tr>
+					<td>\</td>
+					<td>Escape Character - escape any syntactical character</td>
+					<td>http://www.example.com/\(want_paren_matched\)/*</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+</body>
+</html>

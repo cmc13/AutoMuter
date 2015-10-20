@@ -1,0 +1,27 @@
+{
+	"name": "Chrome Tab AutoMuter",
+	"version": "1.0",
+	"description": "Auto-Mutes Chrome tabs based on URL",
+	"manifest_version": 2,
+	"permissions": [ "storage", "tabs", "contextMenus" ],
+	"background": {
+		"scripts": [ "url-pattern.js", "util.js", "script.js" ]
+	},
+	"options_ui": {
+		"page": "options/options.html",
+		"chrome_style": true
+	},
+	"icons": {
+		"16": "icons/AutoMuter_16.ico",
+		"48": "icons/AutoMuter_48.ico",
+		"128": "icons/AutoMuter_128.ico"
+	},
+	"browser_action": {
+		"default_title": "Chrome Tab AutoMuter",
+		"default_popup": "popup/popup.html",
+		"default_icon": {
+			"19": "icons/mute_19.png",
+			"38": "icons/mute_38.png"
+		}
+	}
+}
