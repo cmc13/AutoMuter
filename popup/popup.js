@@ -1,4 +1,4 @@
-ready(function () {
+UTIL.ready(function () {
 	var txtNewUrl = document.getElementById('txtNewUrl');
 	var btnAddUrl = document.getElementById('btnAddUrl');
 
@@ -9,7 +9,7 @@ ready(function () {
 		if (tabs.length > 0) {
 			txtNewUrl.value = tabs[0].url;
 
-			if (validatePattern(tabs[0].url)) {
+			if (UTIL.validatePattern(tabs[0].url)) {
 				txtNewUrl.style.backgroundColor = '';
 				btnAddUrl.disabled = false;
 			} else {
@@ -20,7 +20,7 @@ ready(function () {
 	});
 
 	txtNewUrl.oninput = function () {
-		if (validatePattern(txtNewUrl.value.trim())) {
+		if (UTIL.validatePattern(txtNewUrl.value.trim())) {
 			txtNewUrl.style.backgroundColor = '';
 			btnAddUrl.disabled = false;
 		} else {
@@ -30,19 +30,19 @@ ready(function () {
 	};
 
 	btnAddUrl.onclick = function () {
-		loadSettings(function (settings) {
+		UTIL.loadSettings(function (settings) {
 			var newUrl = txtNewUrl.value.trim();
-			if (validatePattern(newUrl)) {
-				newUrl = escapeURLPattern(txtNewUrl.value.trim());
+			if (UTIL.validatePattern(newUrl)) {
+				newUrl = UTIL.escapeURLPattern(txtNewUrl.value.trim());
 				var contains = false;
 				for (var i = 0; i < settings.urlPatterns.length && !contains; ++i) {
 					if (settings.urlPatterns[i] === newUrl)
 						contains = true;
 				}
 				if (!contains)
-					settings.urlPatterns.push(escapeURLPattern(txtNewUrl.value));
+					settings.urlPatterns.push(UTIL.escapeURLPattern(txtNewUrl.value));
 
-				saveSettings(settings, function () {
+				UTIL.saveSettings(settings, function () {
 					window.close();
 				});
 			} else {

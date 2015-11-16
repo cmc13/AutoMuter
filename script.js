@@ -1,118 +1,93 @@
-var urlPatterns = [];
-var urlPatternsLoaded = false;
+(function () {
+	var urlPatterns = [];
+	var settingsLoaded = false;
 
-function globStringToRegex(str) {
-    return new RegExp(preg_quote(str).replace(/\\\*/g, '.*').replace(/\\\?/g, '.'), 'g');
-}
+	// Mute (or unmute) a tab
+	function toggleMute(tab, tabId) {
+		var isMuted = false;
 
-function preg_quote (str, delimiter) {
-    // http://kevin.vanzonneveld.net
-    // +   original by: booeyOH
-    // +   improved by: Ates Goral (http://magnetiq.com)
-    // +   improved by: Kevin van Zonneveld (http://kevin.vanzonneveld.net)
-    // +   bugfixed by: Onno Marsman
-    // +   improved by: Brett Zamir (http://brett-zamir.me)
-    // *     example 1: preg_quote("$40");
-    // *     returns 1: '\$40'
-    // *     example 2: preg_quote("*RRRING* Hello?");
-    // *     returns 2: '\*RRRING\* Hello\?'
-    // *     example 3: preg_quote("\\.+*?[^]$(){}=!<>|:");
-    // *     returns 3: '\\\.\+\*\?\[\^\]\$\(\)\{\}\=\!\<\>\|\:'
-    return (str + '').replace(new RegExp('[.\\\\+*?\\[\\^\\]$(){}=!<>|:\\' + (delimiter || '') + '-]', 'g'), '\\$&');
-}
+		// Chrome's muted API changed in v46
+		if (typeof tab.muted !== 'undefined') // v < 46
+			isMuted = tab.muted;
+		else if (typeof tab.mutedInfo !== 'undefined') // v >= 46
+			isMuted = tab.mutedInfo.muted;
 
-// Return true if url matches any pattern in list. Return false, otherwise.
-function isMatchingUrl(url) {
-	for (var i = 0; i < urlPatterns.length; ++i) {
-		var up = new UrlPattern(urlPatterns[i].replace(':', '\\:'));
-		if (up.match(url)) {
-			return true;
-		}	
+		if (isMuted !== UTIL.isMatchingUrl(urlPatterns, tab.url)) {
+			// Flip current muted state
+			chrome.tabs.update(tabId, { muted: !isMuted });
+		}
 	}
-	return false;
-}
 
-// Mute (or unmute) a tab
-function muteTab(tab, tabId) {
-	var isMuted = false;
+	// Try to mute a tab (wait until url patterns are loaded from storage).
+	function tryMuteTab(tab, tabId) {
+		var mutedCause = null;
 
-	if (typeof tab.muted !== 'undefined')
-		isMuted = tab.muted;
-	else if (typeof tab.mutedInfo !== 'undefined')
-		isMuted = tab.mutedInfo.muted;
+		// Chrome's muted API changed in v46
+		if (typeof tab.mutedCause !== 'undefined') // v < 46
+			mutedCause = tab.mutedCause;
+		else if (typeof tab.mutedInfo !== 'undefined') // v >= 46
+			mutedCause = tab.mutedInfo.reason;
 
-	if ((!isMuted && isMatchingUrl(tab.url))
-		|| (isMuted && !isMatchingUrl(tab.url))) {
-		chrome.tabs.update(tabId, {
-			muted: !isMuted
+		// Don't change current muted state if it was modified by user
+		if (mutedCause !== "user") {
+			if (!settingsLoaded) {
+				document.addEventListener('settingsLoaded', function f() {
+					toggleMute(tab, tabId);
+					document.removeEventListener('settingsLoaded', f, false);
+				}, false);
+			} else {
+				toggleMute(tab, tabId);
+			}
+		}
+	}
+
+	// Reload settings from chrome storage
+	function reloadSettings() {
+		settingsLoaded = false;
+		UTIL.loadSettings(function (settings) {
+			urlPatterns = settings.urlPatterns;
+			settingsLoaded = true;
+			document.dispatchEvent(settingsLoadedEvent);
 		});
+	};
+
+	// Set up custom event for loading settings from storage since the storage API is asynchronous
+	var settingsLoadedEvent;
+	if (window.CustomEvent) {
+		settingsLoadedEvent = new CustomEvent('settingsLoaded');
+	} else {
+		settingsLoadedEvent = document.createEvent('Event');
+		settingsLoadedEvent.initEvent('settingsLoaded', true, true);
 	}
-}
 
-// Try to mute a tab (wait until url patterns are loaded from storage).
-function tryMuteTab(tab, tabId, mute) {
-	var mutedCause = null;
-	if (typeof tab.mutedCause !== 'undefined')
-		mutedCause = tab.mutedCause;
-	else if (typeof tab.mutedInfo !== 'undefined')
-		mutedCause = tab.mutedInfo.reason;
+	// Reload settings if they change
+	chrome.storage.onChanged.addListener(reloadSettings);
 
-	if (mutedCause !== "user") {
-		if (!urlPatternsLoaded) {
-			document.addEventListener('urlPatternsLoaded', function (e) { muteTab(tab, tabId); }, false);
-		} else {
-			muteTab(tab, tabId);
-		}
-	}
-}
-
-// Set up custom event for loading settings from storage since the storage API is asynchronous
-var urlPatternsLoadedEvent;
-if (window.CustomEvent) {
-	urlPatternsLoadedEvent = new CustomEvent('urlPatternsLoaded');
-} else {
-	urlPatternsLoadedEvent = document.createEvent('Event');
-	urlPatternsLoadedEvent.initEvent('urlPatternsLoaded', true, true);
-}
-
-// Reload settings if they change
-chrome.storage.onChanged.addListener(function () {
-	urlPatternsLoaded = false;
-	loadSettings(function (settings) {
-		urlPatterns = settings.urlPatterns;
-		urlPatternsLoaded = true;
+	// If tab was prefetched or instant, it gets replaced rather than updated
+	chrome.tabs.onReplaced.addListener(function (newTabId, oldTabId) {
+		chrome.tabs.get(newTabId, function (tab) {
+			tryMuteTab(tab, newTabId);
+		});
 	});
-});
 
-// If tab was prefetched or instant, it gets replaced
-chrome.tabs.onReplaced.addListener(function (newTabId, oldTabId) {
-	chrome.tabs.get(newTabId, function (tab) {
-		tryMuteTab(tab, newTabId);
+	// Tab was navigated to new URL. Try to mute (if applicable).
+	chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
+		tryMuteTab(tab, tabId);
 	});
-});
 
-// Tab was navigated to new URL. Try to mute (if applicable).
-chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
-	// If tab isn't already muted and wasn't (un-)muted by a user, then mute it.
-	// Likewise, if tab is muted and wasn't (un-)muted by a user, then un-mute it.
-	tryMuteTab(tab, tabId);
-});
-
-// When extension is installed, create a new context menu
-chrome.runtime.onInstalled.addListener(function () {
-	chrome.contextMenus.create({
-		"title": "Automute this page",
-		"contexts": [ "all" ],
-		"onclick": function (info, tab) {
-			var url = chrome.runtime.getURL('options/options.html') + '?newUrl='
-				+ encodeURIComponent(tab.url);
-			chrome.tabs.create({ url: url });
-		}
+	// When extension is installed, create a new context menu
+	chrome.runtime.onInstalled.addListener(function () {
+		chrome.contextMenus.create({
+			"title": "AutoMute this page",
+			"contexts": [ "all" ],
+			"onclick": function (info, tab) {
+				var url = chrome.runtime.getURL('options/options.html') + '?newUrl='
+					+ encodeURIComponent(tab.url);
+				chrome.tabs.create({ url: url });
+			}
+		});
 	});
-});
 
-loadSettings(function (settings) {
-	urlPatterns = settings.urlPatterns;
-	urlPatternsLoaded = true;
-	document.dispatchEvent(urlPatternsLoadedEvent);
-});
+	// Initialize extension
+	reloadSettings();
+}());

@@ -1,4 +1,4 @@
-ready(function () {
+UTIL.ready(function () {
 	var txtNewUrl = document.getElementById('txtNewUrl');
 	var btnAddUrl = document.getElementById('btnAddUrl');
 	var lstUrls = document.getElementById('lstUrls');
@@ -7,7 +7,7 @@ ready(function () {
 	var btnHelp = document.getElementById('btnHelp');
 
 	// Load settings from Chrome storage
-	loadSettings(function (settings) {
+	UTIL.loadSettings(function (settings) {
 		for (var i = 0; i < settings.urlPatterns.length; ++i) {
 			var opt = document.createElement('option');
 			opt.text = settings.urlPatterns[i];
@@ -20,7 +20,7 @@ ready(function () {
 	txtNewUrl.oninput = function () {
 		var newUrl = txtNewUrl.value.trim();
 		if (newUrl) {
-			if (validatePattern(newUrl)) {
+			if (UTIL.validatePattern(newUrl)) {
 				txtNewUrl.style.backgroundColor = '';
 				btnAddUrl.disabled = false;
 			} else {
@@ -87,7 +87,7 @@ ready(function () {
 	btnHelp.onclick = function () {
 		if (!helpTab) {
 			chrome.tabs.create({
-				url: 'options-help.html'
+				url: 'options/options-help.html'
 			}, function (tab) {
 				helpTab = tab;
 
@@ -104,11 +104,11 @@ ready(function () {
 		}
 	};
 
-	var qs = parseQueryString();
+	var qs = UTIL.parseQueryString();
 	if (qs && qs["newUrl"]) {
 		txtNewUrl.value = qs["newUrl"];
 
-		if (validatePattern(qs["newUrl"])) {
+		if (UTIL.validatePattern(qs["newUrl"])) {
 			txtNewUrl.style.backgroundColor = '';
 			btnAddUrl.disabled = false;
 		} else {
