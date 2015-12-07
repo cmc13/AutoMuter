@@ -2,19 +2,9 @@ var UTIL = (function () {
 	var self = {};
 
 	self.escapeURLPattern = function (pat) {
-		return pat.replace('{', '%7B')
-			.replace('}', '%7D')
-			.replace('"', '%22')
-			.replace('<', '%3C')
-			.replace('>', '%3E')
-			.replace('%', '%25')
-			.replace(' ', '%20')
-			.replace('|', '%7C')
-			.replace('^', '%5E')
-			.replace('~', '%7E')
-			.replace('[', '%5B')
-			.replace(']', '%5D')
-			.replace('`', '%60');
+		return pat.replace(/[\[\]{}<>"% |^~`]/g, function (c) {
+			return '%' + c.charCodeAt(0).toString(16);
+		});
 	}
 
 	self.ready = function (fn) {
@@ -29,7 +19,6 @@ var UTIL = (function () {
 		if (!a)
 			a = window.location.search.substr(1).split('&');
 
-		if (a == "") return {};
 		var b = {};
 		for (var i = 0; i < a.length; ++i)
 		{
@@ -45,7 +34,7 @@ var UTIL = (function () {
 	self.validatePattern = function (pat) {
 		if (pat) {
 			try {
-				var up = new UrlPattern(escapeURLPattern(pat).replace(':', '\\:'));
+				var up = new UrlPattern(self.escapeURLPattern(pat).replace(':', '\\:'));
 				up.match('http://www.google.com');
 				return true;
 			} catch (e) {
